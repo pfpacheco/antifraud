@@ -1,6 +1,23 @@
 {
   "config": {
     "country_name": "Nicaragua",
-    "country_code": "NI"
+    "country_code": "NI",
+    "csv_file": {
+      "headers": [
+        "CUSTOMERID",
+        "SERVICEID",
+        "CPEID",
+        "VALUE1",
+        "VALUE2",
+        "VALUE3",
+        "KBPS",
+        "SPGT",
+        "LINEAUNO",
+        "LINEADOS",
+        "MACMTA",
+        "IDSUSPENSION",
+        "NOMBRECLI"
+      ]
+    }
   }
 }

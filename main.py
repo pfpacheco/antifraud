@@ -64,11 +64,13 @@ def check_file_name():
     status = "NOK"
     try:
         config = __get_config__()
-        file = get_csv_file()
+        file_name = get_csv_file()
+        dir_name = __get_dir_name__(action="read")
+        file = dir_name + "/" + get_csv_file()
         country_code = config.get("country_code")
-        if country_code in str(file[0:2]):
+        if country_code in str(file_name[0:2]):
             pattern = re.compile(datetime.strftime(datetime.utcnow(), "%Y%m%d"))
-            matcher = re.search(pattern, file[3:11])
+            matcher = re.search(pattern, file_name[3:11])
             print(matcher)
             if matcher:
                 status = "OK"
@@ -90,6 +92,8 @@ def check_file_name():
 def check_file_age():
     status = "NOK"
     try:
+        dir_name = __get_dir_name__(action="read")
+        file = dir_name + "/" + get_csv_file()
         file_name = get_csv_file()
         datetime_obj = datetime.strptime(file_name[3:14], '%Y%m%d%H%M%S')
         delta = datetime.date(datetime.utcnow()) - datetime.date(datetime_obj)
@@ -98,10 +102,32 @@ def check_file_age():
             return status
         else:
             # generates inconsistence
-            move(file_name, __get_dir_name__())
+            move(file, __get_dir_name__())
             return status
     except Exception as expt:
         raise BaseException(expt)
 
 
-print("check_file_name -> {}".format(check_file_name()))
+def check_file_header():
+    status = "NOK"
+    try:
+        config = __get_config__()
+        dir_name = __get_dir_name__(action="read")
+        file = dir_name + "/" + get_csv_file()
+        header = config.get("csv_file").get("headers")
+        for line in open(file, "r", encoding="utf8").readlines():
+            elements = line.split(";")
+            for index in range(len(elements)):
+                if header[index] != elements[index]:
+                    # generate inconsistences
+                    move(file, __get_dir_name__())
+                    return status
+                else:
+                    status = "OK"
+        return status
+    except Exception as expt:
+        raise BaseException(expt)
+    return status
+
+
+print("check_file_header -> {}".format(check_file_header()))
