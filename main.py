@@ -45,7 +45,7 @@ def __get_pattern__():
     return name
 
 
-def get_csv_file():
+def __get_file_name__():
     file = ""
     try:
         dir_name = __get_dir_name__(action="read")
@@ -60,13 +60,19 @@ def get_csv_file():
     return file
 
 
+def get_csv_file(action):
+    dir_name = __get_dir_name__(action)
+    file_name = __get_file_name__()
+    file = dir_name + "/" + file_name
+    return file
+
+
 def check_file_name():
     status = "NOK"
     try:
         config = __get_config__()
-        file_name = get_csv_file()
-        dir_name = __get_dir_name__(action="read")
-        file = dir_name + "/" + get_csv_file()
+        file = get_csv_file(action="reader")
+        file_name = __get_file_name__()
         country_code = config.get("country_code")
         if country_code in str(file_name[0:2]):
             pattern = re.compile(datetime.strftime(datetime.utcnow(), "%Y%m%d"))
@@ -92,9 +98,8 @@ def check_file_name():
 def check_file_age():
     status = "NOK"
     try:
-        dir_name = __get_dir_name__(action="read")
-        file = dir_name + "/" + get_csv_file()
-        file_name = get_csv_file()
+        file = get_csv_file(action="read")
+        file_name = __get_file_name__()
         datetime_obj = datetime.strptime(file_name[3:14], '%Y%m%d%H%M%S')
         delta = datetime.date(datetime.utcnow()) - datetime.date(datetime_obj)
         if delta.days < 30:
@@ -112,8 +117,7 @@ def check_file_header():
     status = "NOK"
     try:
         config = __get_config__()
-        dir_name = __get_dir_name__(action="read")
-        file = dir_name + "/" + get_csv_file()
+        file = get_csv_file(action="read")
         header = config.get("csv_file").get("headers")
         for line in open(file, "r", encoding="utf8").readlines():
             elements = line.split(";")
@@ -127,7 +131,6 @@ def check_file_header():
         return status
     except Exception as expt:
         raise BaseException(expt)
-    return status
-    
+
 
 print("check_file_header -> {}".format(check_file_header()))
