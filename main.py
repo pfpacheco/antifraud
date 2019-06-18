@@ -1,6 +1,10 @@
 # ====================================================================================================================
+# This is the script implemented to validate csv file and to check information about billing information and the
+# central platform of AXESS.
 #
-#
+# version: 1.0.0
+# author : ppacheco
+# date   : 17.06.2019
 #
 # ====================================================================================================================
 import os
@@ -118,16 +122,16 @@ def check_file_header():
     try:
         config = __get_config__()
         file = get_csv_file(action="read")
-        header = config.get("csv_file").get("headers")
+        headers = config.get("csv_file").get("headers")
         for line in open(file, "r", encoding="utf8").readlines():
-            elements = line.split(";")
-            for index in range(len(elements)):
-                if header[index] != elements[index]:
+            elements = line.strip("\n").split(";")
+            for index in range(0, len(elements)):
+                if str(elements[index]) != str(headers[index]):
                     # generate inconsistences
                     move(file, __get_dir_name__())
                     return status
-                else:
-                    status = "OK"
+            break
+        status = "OK"
         return status
     except Exception as expt:
         raise BaseException(expt)
