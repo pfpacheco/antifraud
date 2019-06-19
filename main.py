@@ -12,7 +12,7 @@ import re
 import sys
 from json import loads
 from datetime import datetime
-from shutil import move
+
 
 sys.path.append("./opt/production_axess")
 
@@ -29,14 +29,10 @@ def __get_config__():
     return config
 
 
-def __get_dir_name__(action="delete"):
+def __get_dir_name__(action="read"):
     dir_name = sys.path.__getitem__(len(sys.path) - 1)
     if action == "read":
         dir_name += "/daily_csv/"
-    elif action == "archive":
-        dir_name += "/archive_csv/"
-    else:
-        dir_name += "/deleted_csv/"
     return dir_name
 
 
@@ -60,22 +56,23 @@ def __get_file_name__():
             if matcher:
                 return file
     except Exception as expt:
+        # generates inconsistence
         raise BaseException(expt)
     return file
 
 
-def get_csv_file(action):
-    dir_name = __get_dir_name__(action)
+def __get_csv_file__():
+    dir_name = __get_dir_name__(action="read")
     file_name = __get_file_name__()
     file = dir_name + "/" + file_name
     return file
 
 
-def check_file_name():
+def __check_file_name__():
     status = "NOK"
     try:
         config = __get_config__()
-        file = get_csv_file(action="reader")
+        file = __get_csv_file__()
         file_name = __get_file_name__()
         country_code = config.get("country_code")
         if country_code in str(file_name[0:2]):
@@ -86,23 +83,22 @@ def check_file_name():
                 status = "OK"
                 return status
             else:
-                source = __get_dir_name__(action="read")
-                source += file
-                move(source, __get_dir_name__())
                 # generates inconsistence
+                os.remove(file)
                 return status
         else:
             # generates inconsistence
-            move(file, __get_dir_name__())
+            os.remove(file)
             return status
     except Exception as expt:
+        # generates inconsistence
         raise BaseException(expt)
 
 
-def check_file_age():
+def __check_file_age_():
     status = "NOK"
     try:
-        file = get_csv_file(action="read")
+        file = __get_csv_file__()
         file_name = __get_file_name__()
         datetime_obj = datetime.strptime(file_name[3:14], '%Y%m%d%H%M%S')
         delta = datetime.date(datetime.utcnow()) - datetime.date(datetime_obj)
@@ -111,30 +107,106 @@ def check_file_age():
             return status
         else:
             # generates inconsistence
-            move(file, __get_dir_name__())
+            os.remove(file)
             return status
     except Exception as expt:
+        # generates inconsistence
         raise BaseException(expt)
 
 
-def check_file_header():
+def __check_file_header__():
     status = "NOK"
     try:
         config = __get_config__()
-        file = get_csv_file(action="read")
+        file = __get_csv_file__()
         headers = config.get("csv_file").get("headers")
         for line in open(file, "r", encoding="utf8").readlines():
             elements = line.strip("\n").split(";")
             for index in range(0, len(elements)):
                 if str(elements[index]) != str(headers[index]):
                     # generate inconsistences
-                    move(file, __get_dir_name__())
+                    os.remove(file)
                     return status
             break
         status = "OK"
         return status
     except Exception as expt:
+        # generates inconsistence
         raise BaseException(expt)
 
 
-print("check_file_header -> {}".format(check_file_header()))
+def __get_customers__():
+    customers = dict()
+    try:
+        file = __get_csv_file__()
+        for index in range(0, len(open(file, "r", encoding="utf8").readlines())):
+            if index > 0:
+                line = open(file, "r", encoding="utf8").readlines()[index]
+                elements = line.strip("\n").split(";")
+                customers.update(
+                    {
+                        "customer{}".format(str(index)):
+                        {
+                            "customerid": elements[0],
+                            "serviceid": elements[1],
+                            "cpeid": elements[2],
+                            "value1": elements[3],
+                            "value2": elements[4],
+                            "value3": elements[5],
+                            "kbps": elements[6],
+                            "spgt": elements[7],
+                            "lineauno": elements[8],
+                            "lineados": elements[9],
+                            "macmta": elements[10],
+                            "idsuspension": elements[11],
+                            "nombrecli": elements[12]
+                        }
+                    }
+                )
+        return customers
+    except Exception as expt:
+        # generates inconsistence
+        raise BaseException(expt)
+
+
+def __check_duplicate_customers__():
+    results = dict()
+    try:
+        normalized = dict()
+        customers = __get_customers__()
+        for customer in customers.values():
+            service_id = customer.get("serviceid")
+            for comparable in customers.values():
+                if service_id == comparable.get("serviceid"):
+                    normalized.update(
+                        {
+                            "customer_{}".format(comparable.get("customerid")):
+                            {
+                                "customerid": comparable.get("customerid"),
+                                "serviceid": comparable.get("serviceid"),
+                                "cpeid": comparable.get("cpeid"),
+                                "value1": comparable.get("value1"),
+                                "value2": comparable.get("value2"),
+                                "value3": comparable.get("value3"),
+                                "kbps": comparable.get("kbps"),
+                                "spgt": comparable.get("spgt"),
+                                "lineauno": comparable.get("lineauno"),
+                                "lineados": comparable.get("lineados"),
+                                "macmta": comparable.get("macmta"),
+                                "idsuspension": comparable.get("idsuspension"),
+                                "nombrecli": comparable.get("nombrecli")
+                            }
+                        }
+                    )
+        results.update(
+            {
+                "normalized": normalized
+            }
+        )
+        return results
+    except Exception as expt:
+        # generates inconsistence
+        raise BaseException(expt)
+
+
+print("check_duplicate_customsers -> {}".format(__check_duplicate_customers__()))
