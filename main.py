@@ -13,7 +13,6 @@ import sys
 from json import loads
 from datetime import datetime
 
-
 sys.path.append("./opt/production_axess")
 
 
@@ -120,10 +119,10 @@ def __check_file_header__():
         config = __get_config__()
         file = __get_csv_file__()
         headers = config.get("csv_file").get("headers")
-        for line in open(file, "r", encoding="utf8").readlines():
+        for line in open(file, "r").readlines():
             elements = line.strip("\n").split(";")
-            for index in range(0, len(elements)):
-                if str(elements[index]) != str(headers[index]):
+            for i in range(0, len(elements)):
+                if str(elements[i]) != str(headers[i]):
                     # generate inconsistences
                     os.remove(file)
                     return status
@@ -136,31 +135,28 @@ def __check_file_header__():
 
 
 def __get_customers__():
-    customers = dict()
+    customers = list()
     try:
         file = __get_csv_file__()
-        for index in range(0, len(open(file, "r", encoding="utf8").readlines())):
-            if index > 0:
-                line = open(file, "r", encoding="utf8").readlines()[index]
-                elements = line.strip("\n").split(";")
-                customers.update(
+        for i in range(0, len(open(file, "r").readlines())):
+            line = open(file, "r").readlines()[i]
+            elements = line.strip("\n").split(";")
+            if i > 0:
+                customers.append(
                     {
-                        "customer{}".format(str(index)):
-                        {
-                            "customerid": elements[0],
-                            "serviceid": elements[1],
-                            "cpeid": elements[2],
-                            "value1": elements[3],
-                            "value2": elements[4],
-                            "value3": elements[5],
-                            "kbps": elements[6],
-                            "spgt": elements[7],
-                            "lineauno": elements[8],
-                            "lineados": elements[9],
-                            "macmta": elements[10],
-                            "idsuspension": elements[11],
-                            "nombrecli": elements[12]
-                        }
+                        "customerid": elements[0],
+                        "serviceid": elements[1],
+                        "cpeid": elements[2],
+                        "value1": elements[3],
+                        "value2": elements[4],
+                        "value3": elements[5],
+                        "kbps": elements[6],
+                        "spgt": elements[7],
+                        "lineauno": elements[8],
+                        "lineados": elements[9],
+                        "macmta": elements[10],
+                        "idsuspension": elements[11],
+                        "nombrecli": elements[12]
                     }
                 )
         return customers
@@ -169,33 +165,34 @@ def __get_customers__():
         raise BaseException(expt)
 
 
-def __check_duplicate_customers__():
+def __get_normalized_customers__():
     results = dict()
     try:
         normalized = dict()
         customers = __get_customers__()
-        for customer in customers.values():
-            service_id = customer.get("serviceid")
-            for comparable in customers.values():
-                if service_id == comparable.get("serviceid"):
+        for customer in customers:
+            serviceid = customer.get("serviceid")
+            customers.remove(customer)
+            for comparable in customers:
+                if serviceid != comparable.get("serviceid"):
                     normalized.update(
                         {
-                            "customer_{}".format(comparable.get("customerid")):
-                            {
-                                "customerid": comparable.get("customerid"),
-                                "serviceid": comparable.get("serviceid"),
-                                "cpeid": comparable.get("cpeid"),
-                                "value1": comparable.get("value1"),
-                                "value2": comparable.get("value2"),
-                                "value3": comparable.get("value3"),
-                                "kbps": comparable.get("kbps"),
-                                "spgt": comparable.get("spgt"),
-                                "lineauno": comparable.get("lineauno"),
-                                "lineados": comparable.get("lineados"),
-                                "macmta": comparable.get("macmta"),
-                                "idsuspension": comparable.get("idsuspension"),
-                                "nombrecli": comparable.get("nombrecli")
-                            }
+                            "customer_{}".format(customer.get("customerid")):
+                                {
+                                    "customerid": customer.get("customerid"),
+                                    "serviceid": customer.get("serviceid"),
+                                    "cpeid": customer.get("cpeid"),
+                                    "value1": customer.get("value1"),
+                                    "value2": customer.get("value2"),
+                                    "value3": customer.get("value3"),
+                                    "kbps": customer.get("kbps"),
+                                    "spgt": customer.get("spgt"),
+                                    "lineauno": customer.get("lineauno"),
+                                    "lineados": customer.get("lineados"),
+                                    "macmta": customer.get("macmta"),
+                                    "idsuspension": customer.get("idsuspension"),
+                                    "nombrecli": customer.get("nombrecli")
+                                }
                         }
                     )
         results.update(
@@ -209,4 +206,4 @@ def __check_duplicate_customers__():
         raise BaseException(expt)
 
 
-print("check_duplicate_customsers -> {}".format(__check_duplicate_customers__()))
+print("__get_normalized_customers__ -> {}".format(__get_normalized_customers__()))
