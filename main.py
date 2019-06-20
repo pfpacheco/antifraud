@@ -165,45 +165,58 @@ def __get_customers__():
         raise BaseException(expt)
 
 
-def __get_normalized_customers__():
-    results = dict()
+def __get_normalized_customers__(log):
     try:
-        normalized = dict()
+        results = list()
         customers = __get_customers__()
         for customer in customers:
+            normalized = dict()
             serviceid = customer.get("serviceid")
-            customers.remove(customer)
             for comparable in customers:
                 if serviceid != comparable.get("serviceid"):
                     normalized.update(
                         {
-                            "customer_{}".format(customer.get("customerid")):
-                                {
-                                    "customerid": customer.get("customerid"),
-                                    "serviceid": customer.get("serviceid"),
-                                    "cpeid": customer.get("cpeid"),
-                                    "value1": customer.get("value1"),
-                                    "value2": customer.get("value2"),
-                                    "value3": customer.get("value3"),
-                                    "kbps": customer.get("kbps"),
-                                    "spgt": customer.get("spgt"),
-                                    "lineauno": customer.get("lineauno"),
-                                    "lineados": customer.get("lineados"),
-                                    "macmta": customer.get("macmta"),
-                                    "idsuspension": customer.get("idsuspension"),
-                                    "nombrecli": customer.get("nombrecli")
-                                }
+                            "customerid": customer.get("customerid"),
+                            "serviceid": customer.get("serviceid"),
+                            "cpeid": customer.get("cpeid"),
+                            "value1": customer.get("value1"),
+                            "value2": customer.get("value2"),
+                            "value3": customer.get("value3"),
+                            "kbps": customer.get("kbps"),
+                            "spgt": customer.get("spgt"),
+                            "lineauno": customer.get("lineauno"),
+                            "lineados": customer.get("lineados"),
+                            "macmta": customer.get("macmta"),
+                            "idsuspension": customer.get("idsuspension"),
+                            "nombrecli": customer.get("nombrecli")
                         }
                     )
-        results.update(
-            {
-                "normalized": normalized
-            }
-        )
+            results.append(normalized)
         return results
     except Exception as expt:
         # generates inconsistence
         raise BaseException(expt)
 
 
-print("__get_normalized_customers__ -> {}".format(__get_normalized_customers__()))
+# =============================================================================
+# Get information from AXESS Central Plaform by normalized customer information
+# Services to be executed
+# 1 - Find serviceid in AXServiceStorage (if exists...)
+# 2 - Check MAC and PLAN (if matches...)
+# 3 - Check Status in billing and compares within AXServiceStorage
+# =============================================================================
+def find_in_service_storage(log, flag, caller):
+    custom = dict()
+    try:
+        customers = __get_normalized_customers__(log)
+        for customer in customers:
+            _id = customer.get("serviceid")
+            sql = " SELECT * from AXTable " \
+                  " WHERE serviceid = {} ".format(_id)
+            res = caller.manage_runSQL(sql)
+            if len(res) > 0:
+                custom.update({
+
+                })
+    except Exception as expt:
+        log(10, "An error occurred in exection raising an  exception: {}".format(expt))
