@@ -13,8 +13,6 @@ import sys
 from json import loads
 from datetime import datetime
 
-sys.path.append("./opt/production_axess")
-
 
 def __get_time__():
     time_now = datetime.utcnow()
@@ -196,27 +194,3 @@ def __get_normalized_customers__(log):
     except Exception as expt:
         # generates inconsistence
         raise BaseException(expt)
-
-
-# =============================================================================
-# Get information from AXESS Central Plaform by normalized customer information
-# Services to be executed
-# 1 - Find serviceid in AXServiceStorage (if exists...)
-# 2 - Check MAC and PLAN (if matches...)
-# 3 - Check Status in billing and compares within AXServiceStorage
-# =============================================================================
-def find_in_service_storage(log, flag, caller):
-    custom = dict()
-    try:
-        customers = __get_normalized_customers__(log)
-        for customer in customers:
-            _id = customer.get("serviceid")
-            sql = " SELECT * from AXTable " \
-                  " WHERE serviceid = {} ".format(_id)
-            res = caller.manage_runSQL(sql)
-            if len(res) > 0:
-                custom.update({
-
-                })
-    except Exception as expt:
-        log(10, "An error occurred in exection raising an  exception: {}".format(expt))
