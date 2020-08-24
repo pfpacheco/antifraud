@@ -22,7 +22,7 @@ def __get_time__():
 
 def __get_config__():
     config = loads(open("./config/config.json").read())
-    config = config.get("config")
+    # config = config.get("config")
     return config
 
 
